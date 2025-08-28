@@ -1,23 +1,23 @@
-name: Deploy Azure Infrastructure
+name: Deploy Azure Container Apps
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Manual trigger
 
 env:
   AZURE_RESOURCE_GROUP: demo-resource-group
   LOCATION: eastasia
-
   PLAN_NAME: demo-appservice-plan
   WEBAPP1_NAME: demo-webapp-1
   WEBAPP2_NAME: demo-webapp-2
   WEBAPP3_NAME: demo-webapp-3
+  CONTAINER_IMAGE: nginx:latest # replace with your container image
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Log in to Azure
@@ -25,47 +25,86 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Create Resource Group
+      - name: Set Subscription
         run: |
-          az group create \
-            --name $AZURE_RESOURCE_GROUP \
-            --location $LOCATION
+          az account set --subscription <YOUR_SUBSCRIPTION_ID>
 
-      - name: Create App Service Plan (Linux, B1 SKU)
+      - name: Create Resource Group if not exists
         run: |
-          az appservice plan create \
-            --name $PLAN_NAME \
-            --resource-group $AZURE_RESOURCE_GROUP \
-            --is-linux \
-            --sku B1
+          if az group show --name $AZURE_RESOURCE_GROUP > /dev/null 2>&1; then
+            echo "✅ Resource Group $AZURE_RESOURCE_GROUP already exists."
+          else
+            echo "Creating Resource Group $AZURE_RESOURCE_GROUP..."
+            az group create --name $AZURE_RESOURCE_GROUP --location $LOCATION
+          fi
 
-      - name: Verify Plan Exists
+      - name: Verify Resource Group
         run: |
-          echo "Checking if App Service Plan exists..."
-          az appservice plan show \
-            --name $PLAN_NAME \
-            --resource-group $AZURE_RESOURCE_GROUP
+          if az group show --name $AZURE_RESOURCE_GROUP > /dev/null 2>&1; then
+            echo "✅ Resource Group $AZURE_RESOURCE_GROUP verified."
+          else
+            echo "❌ Resource Group $AZURE_RESOURCE_GROUP not found!"
+            exit 1
+          fi
 
-      - name: Create Web App 1
+      - name: Create App Service Plan if not exists
         run: |
-          az webapp create \
-            --resource-group $AZURE_RESOURCE_GROUP \
-            --plan $PLAN_NAME \
-            --name $WEBAPP1_NAME \
-            --deployment-container-image-name nginx:latest
+          if az appservice plan show --name $PLAN_NAME --resource-group $AZURE_RESOURCE_GROUP > /dev/null 2>&1; then
+            echo "✅ App Service Plan $PLAN_NAME already exists."
+          else
+            echo "Creating App Service Plan $PLAN_NAME..."
+            az appservice plan create \
+              --name $PLAN_NAME \
+              --resource-group $AZURE_RESOURCE_GROUP \
+              --is-linux \
+              --sku B1 \
+              --location $LOCATION
+          fi
 
-      - name: Create Web App 2
+      - name: Verify App Service Plan
         run: |
-          az webapp create \
-            --resource-group $AZURE_RESOURCE_GROUP \
-            --plan $PLAN_NAME \
-            --name $WEBAPP2_NAME \
-            --deployment-container-image-name nginx:latest
+          if az appservice plan show --name $PLAN_NAME --resource-group $AZURE_RESOURCE_GROUP > /dev/null 2>&1; then
+            echo "✅ App Service Plan $PLAN_NAME verified."
+          else
+            echo "❌ App Service Plan $PLAN_NAME not found!"
+            exit 1
+          fi
 
-      - name: Create Web App 3
+      - name: Create Web App 1 if not exists
         run: |
-          az webapp create \
-            --resource-group $AZURE_RESOURCE_GROUP \
-            --plan $PLAN_NAME \
-            --name $WEBAPP3_NAME \
-            --deployment-container-image-name nginx:latest
+          if az webapp show --name $WEBAPP1_NAME --resource-group $AZURE_RESOURCE_GROUP > /dev/null 2>&1; then
+            echo "✅ Web App $WEBAPP1_NAME already exists."
+          else
+            echo "Creating Web App $WEBAPP1_NAME..."
+            az webapp create \
+              --resource-group $AZURE_RESOURCE_GROUP \
+              --plan $PLAN_NAME \
+              --name $WEBAPP1_NAME \
+              --deployment-container-image-name $CONTAINER_IMAGE
+          fi
+
+      - name: Create Web App 2 if not exists
+        run: |
+          if az webapp show --name $WEBAPP2_NAME --resource-group $AZURE_RESOURCE_GROUP > /dev/null 2>&1; then
+            echo "✅ Web App $WEBAPP2_NAME already exists."
+          else
+            echo "Creating Web App $WEBAPP2_NAME..."
+            az webapp create \
+              --resource-group $AZURE_RESOURCE_GROUP \
+              --plan $PLAN_NAME \
+              --name $WEBAPP2_NAME \
+              --deployment-container-image-name $CONTAINER_IMAGE
+          fi
+
+      - name: Create Web App 3 if not exists
+        run: |
+          if az webapp show --name $WEBAPP3_NAME --resource-group $AZURE_RESOURCE_GROUP > /dev/null 2>&1; then
+            echo "✅ Web App $WEBAPP3_NAME already exists."
+          else
+            echo "Creating Web App $WEBAPP3_NAME..."
+            az webapp create \
+              --resource-group $AZURE_RESOURCE_GROUP \
+              --plan $PLAN_NAME \
+              --name $WEBAPP3_NAME \
+              --deployment-container-image-name $CONTAINER_IMAGE
+          fi
