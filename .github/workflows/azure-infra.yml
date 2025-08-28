@@ -1,4 +1,4 @@
-name: Deploy Azure Container Apps
+name: Create Azure Envirnoment
 
 on:
   workflow_dispatch:
