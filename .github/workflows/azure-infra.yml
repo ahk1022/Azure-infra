@@ -5,7 +5,7 @@ on:
 
 env:
   AZURE_RESOURCE_GROUP: "demo-resource-group"
-  LOCATION: "eastus"
+  LOCATION: "eastasia"
 
   WEBAPP1_NAME: "my-container-webapp-1"
   WEBAPP2_NAME: "my-container-webapp-2"
