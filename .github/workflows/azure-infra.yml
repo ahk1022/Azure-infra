@@ -7,6 +7,10 @@ on:
         description: 'Azure Resource Group Name'
         required: true
         default: 'demo-resource-group'
+      location:
+        description: 'Azure Location / Region'
+        required: true
+        default: 'eastasia'
       webapp1_name:
         description: 'Web App 1 Name'
         required: true
@@ -27,8 +31,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      LOCATION: eastasia
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -41,6 +44,7 @@ jobs:
       - name: Set variables from user input
         run: |
           echo "RESOURCE_GROUP=${{ github.event.inputs.resource_group }}" >> $GITHUB_ENV
+          echo "LOCATION=${{ github.event.inputs.location }}" >> $GITHUB_ENV
           echo "WEBAPP1_NAME=${{ github.event.inputs.webapp1_name }}" >> $GITHUB_ENV
           echo "WEBAPP2_NAME=${{ github.event.inputs.webapp2_name }}" >> $GITHUB_ENV
           echo "WEBAPP3_NAME=${{ github.event.inputs.webapp3_name }}" >> $GITHUB_ENV
@@ -97,10 +101,3 @@ jobs:
               echo "✅ Web App $WEBAPP already exists."
             else
               echo "Creating Web App $WEBAPP..."
-              az webapp create \
-                --resource-group $RESOURCE_GROUP \
-                --plan $PLAN_NAME \
-                --name $WEBAPP \
-                --deployment-container-image-name $CONTAINER_IMAGE
-            fi
-          done
