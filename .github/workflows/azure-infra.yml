@@ -1,16 +1,16 @@
 name: Deploy Azure Infrastructure
 
 on:
-  workflow_dispatch: # Manual trigger
+  workflow_dispatch:
 
 env:
-  AZURE_RESOURCE_GROUP: "demo-resource-group"
-  LOCATION: "eastasia"
+  AZURE_RESOURCE_GROUP: demo-resource-group
+  LOCATION: eastasia
 
-  WEBAPP1_NAME: "my-container-webapp-1"
-  WEBAPP2_NAME: "my-container-webapp-2"
-  WEBAPP3_NAME: "my-container-webapp-3"
-  PLAN_NAME: "my-appservice-plan"
+  PLAN_NAME: demo-appservice-plan
+  WEBAPP1_NAME: demo-webapp-1
+  WEBAPP2_NAME: demo-webapp-2
+  WEBAPP3_NAME: demo-webapp-3
 
 jobs:
   deploy:
@@ -23,7 +23,7 @@ jobs:
       - name: Log in to Azure
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }} # Must be stored in GitHub Secrets
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Create Resource Group
         run: |
@@ -38,6 +38,13 @@ jobs:
             --resource-group $AZURE_RESOURCE_GROUP \
             --is-linux \
             --sku B1
+
+      - name: Verify Plan Exists
+        run: |
+          echo "Checking if App Service Plan exists..."
+          az appservice plan show \
+            --name $PLAN_NAME \
+            --resource-group $AZURE_RESOURCE_GROUP
 
       - name: Create Web App 1
         run: |
