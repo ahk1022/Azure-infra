@@ -1,5 +1,4 @@
-name: Create Azure Environment
-
+name: Create webapp on azure
 on:
   workflow_dispatch:
     inputs:
