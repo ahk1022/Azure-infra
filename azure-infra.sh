@@ -34,7 +34,7 @@ else
 fi
 
 # ============
-# App Service Plan
+# App Service Plan is created if not 
 # ============
 if az appservice plan show --name "$PLAN_NAME" --resource-group "$RESOURCE_GROUP" > /dev/null 2>&1; then
   echo "✅ App Service Plan $PLAN_NAME exists"
